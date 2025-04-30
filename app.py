@@ -12,7 +12,7 @@ from api.v1.details import details_bp
 with open("xgboost_model.pkl", "rb") as f:
     model = pickle.load(f)
 
-df = pd.read_csv("Last_version.csv", low_memory=False)
+df = pd.read_csv("final_version.csv", low_memory=False)
 
 categorical_features = ["Transmission", "Carburant", "marque", "modele", "premierMain"]
 numerical_features = ["Kilométrage", "Année", "CV"]

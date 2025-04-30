@@ -5,7 +5,7 @@ import pandas as pd
 details_bp = Blueprint('details', __name__, url_prefix='/v1/details')
 
 # Sample data
-data = pd.read_csv('Last_version.csv')
+data = pd.read_csv('final_version.csv')
 df = pd.DataFrame(data)
 
 
