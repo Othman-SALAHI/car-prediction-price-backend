@@ -75,9 +75,12 @@ def get_models_by_marque(marque):
 #     return df[df["Carburant"] == marque]["marque"].dropna().unique().tolist()
 
 from flask import Flask, request, render_template, jsonify
+from flask_cors import CORS
 
 # Flask App
 app = Flask(__name__)
+CORS(app)
+CORS(app, origins=["http://localhost:8080"])
 
 # Get unique values for select fields
 unique_transmission = df["Transmission"].dropna().unique()
@@ -133,6 +136,42 @@ def get_models(marque):
 # def get_Carburant(Carburant):
 #     marques = get_marque_by_carburant(Carburant)
 #     return jsonify(marques)
+
+from flask import Flask, request, jsonify
+import numpy as np  # just in case your model returns numpy types
+
+@app.route("/predict", methods=["POST", "OPTIONS"])
+def predict():
+    if request.method == "OPTIONS":
+        return '', 200  # CORS preflight
+
+    try:
+        form_data = request.get_json()
+        print("Received data:", form_data)
+
+        input_data = {
+            "Transmission": form_data["selectedGear"],
+            "Carburant": form_data["selectedFuel"],
+            "marque": form_data["marques"],
+            "modele": form_data["models"],
+            "premierMain": int(form_data["premierMain"]),
+            "Kilométrage": float(form_data["kilometrage"]),
+            "Année": int(form_data["annee"]),
+            "CV": int(form_data["cv"])
+        }
+
+        # your prediction function likely returns np.float32 or similar
+        price = predict_price(input_data, model, scaler, label_encoders, numerical_features, categorical_features)
+
+        # Cast it to float (native Python) before returning
+        return jsonify({'price': round(float(price),2)})
+
+    except Exception as e:
+        print("Prediction error:", e)
+        return jsonify({'error': 'Prediction failed'}), 500
+
+
+
 
 if __name__ == "__main__":
     app.run(debug=True)
