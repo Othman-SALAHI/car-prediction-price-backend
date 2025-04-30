@@ -7,7 +7,7 @@ app = Flask(__name__)
 # Enable CORS for all routes and origins
 app.register_blueprint(details_bp)
 CORS(app, resources={r"/api/v1/*": {"origins": "*"}})
-CORS(app, origins=["http://localhost:8080"])
+CORS(app, origins=["https://car-prediction-price-maroc.vercel.app/"])
 
 # Register the blueprint
 
