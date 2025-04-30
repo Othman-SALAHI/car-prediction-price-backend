@@ -5,7 +5,7 @@ from sklearn.preprocessing import LabelEncoder, StandardScaler
 
 
 # Load the model, encoder, and scaler
-with open(r"C:\Users\Othman SALAHI\Desktop\PFM\xgboost_model.pkl", "rb") as f:
+with open(r"xgboost_model.pkl", "rb") as f:
     model = pickle.load(f)
 
 
