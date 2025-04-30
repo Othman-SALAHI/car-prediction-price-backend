@@ -1,95 +1,66 @@
+from flask import Flask, request, render_template, jsonify
+from flask_cors import CORS
 import pandas as pd
 import numpy as np
 import pickle
 from sklearn.preprocessing import LabelEncoder, StandardScaler
+from api.v1.details import details_bp
 
-
-# Load the model, encoder, and scaler
-with open(r"xgboost_model.pkl", "rb") as f:
+# --------------------
+# Model & Data Loading
+# --------------------
+with open("xgboost_model.pkl", "rb") as f:
     model = pickle.load(f)
 
-
 df = pd.read_csv("Last_version.csv", low_memory=False)
-df.shape
 
-
-# Define features
 categorical_features = ["Transmission", "Carburant", "marque", "modele", "premierMain"]
 numerical_features = ["Kilométrage", "Année", "CV"]
 
-# Make a copy of the original DataFrame (optional, for safety)
+# Label encode and scale
 df_encoded = df.copy()
-
-# Ensure categorical columns are strings
 df_encoded[categorical_features] = df_encoded[categorical_features].astype(str)
 
-# Apply Label Encoding to each categorical column
 label_encoders = {}
 for col in categorical_features:
     le = LabelEncoder()
     df_encoded[col] = le.fit_transform(df_encoded[col])
-    label_encoders[col] = le  # Optional: Save encoder for inverse_transform or inference
+    label_encoders[col] = le
 
-# Standardize numerical features
 scaler = StandardScaler()
 df_encoded[numerical_features] = scaler.fit_transform(df_encoded[numerical_features])
 
-# Final feature matrix and target
-X = df_encoded[categorical_features + numerical_features]
-y = df_encoded["prix"]
-
-
-
-
-
-# Define the categorical and numerical features
-categorical_features = ["Transmission", "Carburant", "marque", "modele", "premierMain"]
-numerical_features = ["Kilométrage", "Année", "CV"]
-
+# -----------------
+# Prediction Method
+# -----------------
 def predict_price(input_data, model, scaler, label_encoders, numerical_features, categorical_features):
-
-    # Convert input data to DataFrame
     input_df = pd.DataFrame([input_data])
-
-    # Encode categorical features using saved LabelEncoders
     for col in categorical_features:
         le = label_encoders[col]
         input_df[col] = le.transform(input_df[col].astype(str))
 
-    # Scale numerical features
     input_df[numerical_features] = scaler.transform(input_df[numerical_features])
-
-    # Ensure column order matches training data
     X_input = input_df[categorical_features + numerical_features]
 
-    # Predict
     predicted_price = model.predict(X_input)[0]
-    return predicted_price # Return both log and original price
+    return predicted_price
 
-
-
-def get_models_by_marque(marque):
-    return df[df["marque"] == marque]["modele"].dropna().unique().tolist()
-
-# def get_marque_by_carburant(marque):
-#     return df[df["Carburant"] == marque]["marque"].dropna().unique().tolist()
-
-from flask import Flask, request, render_template, jsonify
-from flask_cors import CORS
-
-# Flask App
+# ----------------------
+# Flask App Initialization
+# ----------------------
 app = Flask(__name__)
-CORS(app)
+app.register_blueprint(details_bp, url_prefix="/v1/details")
+CORS(app, resources={r"/api/v1/*": {"origins": "*"}})
 CORS(app, origins=["http://localhost:8080"])
 
-# Get unique values for select fields
-unique_transmission = df["Transmission"].dropna().unique()
-unique_carburant = df["Carburant"].dropna().unique()
-unique_marque = sorted(df["marque"].dropna().unique())
-unique_modele = sorted(df["modele"].dropna().unique())
-
+# ----------------------
+# UI Form Route
+# ----------------------
 @app.route("/", methods=["GET", "POST"])
 def index():
+    price = None
+    form_data = {}
+
     if request.method == "POST":
         try:
             form_data = {
@@ -119,31 +90,20 @@ def index():
         except Exception as e:
             print("Prediction error:", e)
 
-    return render_template("index.html", 
-                           marques=unique_marque, 
-                           carburants=unique_carburant, 
-                           transmissions=unique_transmission, 
-                           price=price if 'price' in locals() else None, 
-                           form_data=form_data if 'form_data' in locals() else None)
+    return render_template("index.html",
+                           marques=sorted(df["marque"].dropna().unique()),
+                           carburants=df["Carburant"].dropna().unique(),
+                           transmissions=df["Transmission"].dropna().unique(),
+                           price=price,
+                           form_data=form_data)
 
-
-@app.route("/get_models/<marque>", methods=["GET"])
-def get_models(marque):
-    models = get_models_by_marque(marque)
-    return jsonify(models)
-
-# @app.route("/get_marques/<Carburant>", methods=["GET"])
-# def get_Carburant(Carburant):
-#     marques = get_marque_by_carburant(Carburant)
-#     return jsonify(marques)
-
-from flask import Flask, request, jsonify
-import numpy as np  # just in case your model returns numpy types
-
+# -----------------------
+# API Endpoint: Predict
+# -----------------------
 @app.route("/predict", methods=["POST", "OPTIONS"])
 def predict():
     if request.method == "OPTIONS":
-        return '', 200  # CORS preflight
+        return '', 200
 
     try:
         form_data = request.get_json()
@@ -160,18 +120,15 @@ def predict():
             "CV": int(form_data["cv"])
         }
 
-        # your prediction function likely returns np.float32 or similar
         price = predict_price(input_data, model, scaler, label_encoders, numerical_features, categorical_features)
-
-        # Cast it to float (native Python) before returning
-        return jsonify({'price': round(float(price),2)})
+        return jsonify({'price': round(float(price), 2)})
 
     except Exception as e:
         print("Prediction error:", e)
         return jsonify({'error': 'Prediction failed'}), 500
 
-
-
-
+# -----------------------
+# Entry Point
+# -----------------------
 if __name__ == "__main__":
     app.run(debug=True)
