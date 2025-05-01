@@ -128,6 +128,15 @@ def predict():
         print("Prediction error:", e)
         return jsonify({'error': 'Prediction failed'}), 500
 
+def get_models_by_marque(marque):
+    return df[df["marque"] == marque]["modele"].dropna().unique().tolist()
+
+@app.route("/get_models/<marque>", methods=["GET"])
+def get_models(marque):
+    models = get_models_by_marque(marque)
+    return jsonify(models)
+
+
 # -----------------------
 # Entry Point
 # -----------------------
