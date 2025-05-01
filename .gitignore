@@ -1,7 +1,50 @@
-*.pyc
-__pycache__/*
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*.so
+
+# Jupyter Notebook checkpoints
+*.ipynb_checkpoints
+.ipynb_checkpoints/
+
+# Environment
+.env
+.venv/
+env/
+venv/
+ENV/
+*.env
+
+# Data files
+*.csv
+*.tsv
+*.xlsx
+*.json
+*.pkl
+*.joblib
+
+# CatBoost training artifacts
+catboost_info/
+
+# Notebooks and related folders
 *.ipynb
-/ipynb
-catboost_model.pkl
-Last_version.csv
-catboost_info
+ipynb/
+
+# Logs and debug
+*.log
+logs/
+debug.log
+
+# Flask specific
+instance/
+.webassets-cache
+
+# VS Code and IDEs
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# OS files
+.DS_Store
+Thumbs.db
