@@ -1,2 +1,6 @@
 *.pyc
 __pycache__/*
+ipynb
+catboost_modeol.pkl
+Last_version.csv
+catboost_info
