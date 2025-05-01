@@ -1,6 +1,7 @@
 *.pyc
 __pycache__/*
-ipynb
-catboost_modeol.pkl
+*.ipynb
+/ipynb
+catboost_model.pkl
 Last_version.csv
 catboost_info
