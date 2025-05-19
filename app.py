@@ -53,6 +53,7 @@ app.register_blueprint(details_bp, url_prefix="/v1/details")
 CORS(app, resources={r"/api/v1/*": {"origins": "*"}})
 CORS(app, origins=["http://localhost:8080"])
 CORS(app, origins=["https://car-prediction-price-maroc.vercel.app"])
+CORS(app, origins=["http://46.101.105.5:8080"])
 
 # ----------------------
 # UI Form Route
